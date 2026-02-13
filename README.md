@@ -1,6 +1,8 @@
 Beschreibung der Struktur:
 
 combining_both_packages -> beinhaltet alle relevanten Python-Skripte um eine Messreihe zu starten
+mext_pulse_lab_control_suite -> beihaltet die Version2 der GUI (Version 1 ist die Datei: Testbench_Control_Windows.exe)
+single_file_manual_control -> beinhaltet alle relevanten Python Skripte für Einzelmessungen (wobei dieser Ordner eher unrelevant)
 
 Vorgehen:
 
