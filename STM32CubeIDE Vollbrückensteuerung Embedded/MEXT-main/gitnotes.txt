@@ -1,0 +1,11 @@
+Git Notes
+==========
+
+GIT WORKTREE ANLEGEN
+====================
+cd ~/git/mein-projekt
+git init
+git remote add origin <github-url>
+git worktree add ~/ProjektA main
+git worktree add ~/ProjektB main
+
