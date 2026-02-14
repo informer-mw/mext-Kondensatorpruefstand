@@ -16,9 +16,9 @@ from picosdk.ps3000a import ps3000a as ps    # Picoscope PS3000A SDK
 from picosdk.functions import assert_pico_ok # Fehlerprüfung SDK-Aufrufe
 
 # Basisordner & Run-Verzeichnis
-BASE_DIR     = r"C:\Users\mext\Documents\main_code\mext_cap_pulse_lab\combining_both_packages"
+BASE_DIR     = r'C:\Users\mext\Desktop\Messreihen'
 
-RUN_NAME   = "Langzeittest_Cap2"  # Messlauf-Name (Ordner+Datei) Pulse_Test_30V_Source_1
+RUN_NAME   = "TESTLAUF_14022026"  # Messlauf-Name (Ordner+Datei) Pulse_Test_30V_Source_1
 RUN_DIR    = os.path.join(BASE_DIR, "Runs", RUN_NAME) 
 CSV_PATH   = os.path.join(RUN_DIR, f"{RUN_NAME}.csv")
 META_PATH  = os.path.join(RUN_DIR, f"{RUN_NAME}.meta.json")
@@ -54,8 +54,8 @@ COUPLING_B          = ps.PS3000A_COUPLING["PS3000A_AC"]
 RANGE_B             = ps.PS3000A_RANGE["PS3000A_10V"]   # anpassen
 
 # Optional: Volt -> Ampere (Integratorfaktor der Rogowski-Kette)
-ROGOWSKI_V_PER_A    = 0.001          # z.B. 0.1 (V/A). None => CSV in Volt
-U_PROBE_ATTENUATION = 500.0 # 1:10 Tastkopf
+ROGOWSKI_V_PER_A    = 0.001 # z.B. 0.1 (V/A). None => CSV in Volt
+U_PROBE_ATTENUATION = 500.0 # 1:500 Tastkopf
 # ==================================================
 
 

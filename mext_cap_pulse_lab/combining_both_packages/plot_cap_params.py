@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+
 # -*- coding: utf-8 -*-
 
 from pathlib import Path
@@ -8,11 +8,7 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 
 # ===================== CONTROL =====================
-<<<<<<< HEAD
-RUN_NAME         = "t2"
-=======
-RUN_NAME         = "Langzeittest_Cap2"
->>>>>>> e8e37277a7d005bfa2a4fc5eccd2c3ce8bd42a14
+RUN_NAME         = "TESTLAUF_14022026"
 
 # Optionen
 SMOOTH_OVERLAY   = True     # Glättung (Moving Average) als Overlay zeichnen
@@ -22,7 +18,8 @@ SAVE_PNG         = False     # PNGs automatisch speichern
 SHOW_TREND       = True     # Lineare Trendlinie + Text (fallend/steigend)
 # ===================================================
 
-BASE_DIR = Path(__file__).resolve().parent
+#BASE_DIR = Path(__file__).resolve().parent
+BASE_DIR = Path.home() / "Desktop" / "Messreihen"
 RUN_DIR = BASE_DIR / "Runs" / RUN_NAME
 PARAMS_CSV_PATH = RUN_DIR / f"{RUN_NAME}.params.csv"
 

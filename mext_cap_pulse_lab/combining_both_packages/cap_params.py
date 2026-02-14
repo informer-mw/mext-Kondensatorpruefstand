@@ -18,8 +18,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # ===================== CONTROL =====================
-BASE_DIR     = r"C:\Users\mext\Documents\main_code\mext_cap_pulse_lab\combining_both_packages"
-RUN_NAME     = "t2"   # muss zum Messlauf passen (CSV + meta.json)
+BASE_DIR     = r"C:\Users\mext\Desktop\Messreihen"
+RUN_NAME     = "TESTLAUF_14022026"   # muss zum Messlauf passen (CSV + meta.json)
 USE_LAST     = False            # True: neuesten pulse_id verwenden; False: PULSE_ID nutzen
 PULSE_ID     = 3               # nur wenn USE_LAST=False
 U_DC_BIAS_V  = 100.0         # DC-Bias der Spannung (wenn AC-gekoppelt gemessen)
@@ -515,7 +515,7 @@ def pulse_energy_and_power(
         u = u + float(u_dc_bias_V)
 
     p = u * i
-    E = float(np.trapz(p, t))
+    E = float(np.trapezoid(p, t))
     P_peak = float(np.max(p))
     duration = float(t[-1] - t[0]) if t.size else float("nan")
     P_avg = float(E / duration) if duration > 0 else float("nan")
