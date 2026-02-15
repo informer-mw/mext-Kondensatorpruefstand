@@ -2,7 +2,7 @@ import sys
 import subprocess
 from pathlib import Path
 
-BASE_DIR = Path(r"C:\Users\mext\Documents\main_code\mext_cap_pulse_lab\combining_both_packages")
+BASE_DIR = Path(r"C:\Users\mext\Desktop\s\mext-Kondensatorpruefstand\mext_cap_pulse_lab\combining_both_packages")
 
 ACQUIRE = BASE_DIR / "acquire_i_u_pulse.py"
 EVAL    = BASE_DIR / "online_eval_keep_1000.py"
