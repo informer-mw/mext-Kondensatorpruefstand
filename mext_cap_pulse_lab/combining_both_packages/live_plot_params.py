@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-BASE_DIR = Path(r'C:\Users\mext\Desktop\Messreihen')
-RUN_NAME = "Testlauf_1Hz_16022026"
+BASE_DIR = Path(r"C:\Users\mext\Desktop\Messreihen")
+RUN_NAME = "TESTLAUF_16022026"
 REFRESH_S = 1.0
 SHOW_LAST_N = 3000
 

@@ -5,8 +5,8 @@ from pathlib import Path
 import numpy as np
 
 # ===================== CONFIG =====================
-BASE_DIR = Path(r'C:\Users\mext\Desktop\Messreihen')
-RUN_NAME = "Testlauf_1Hz_16022026"
+BASE_DIR = Path(r"C:\Users\mext\Desktop\Messreihen")
+RUN_NAME = "TESTLAUF_16022026"
 
 POLL_INTERVAL_S = 1.0
 FILE_STABLE_AGE_S = 1.5  # Datei muss "alt genug" sein (fertig geschrieben)
@@ -16,7 +16,7 @@ U_IS_AC_COUPLED = True
 U_DC_BIAS_V = 400.0  # anpassen!
 
 KEEP_EVERY_N = 1000   # nur jeden 1000. Puls als Rohdaten behalten
-DRY_RUN = False       # erst True testen, dann False
+DRY_RUN = True      # erst True testen, dann False
 # ==================================================
 
 RUN_DIR = BASE_DIR / "Runs" / RUN_NAME
@@ -164,7 +164,7 @@ def energy_power(t, u, i, *, i_unit, rogowski_v_per_a):
         u = u + float(U_DC_BIAS_V)
 
     p = u * i
-    E = float(np.trapz(p, t))
+    E = float(np.trapezoid(p, t))
     Ppk = float(np.max(p))
     dur = float(t[-1] - t[0]) if t.size else float("nan")
     Pav = float(E / dur) if dur > 0 else float("nan")
