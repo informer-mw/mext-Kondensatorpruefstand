@@ -7,8 +7,10 @@ import matplotlib.pyplot as plt
 BASE_DIR = Path(r"C:\Users\mext\Desktop\Messreihen")
 RUN_NAME = "TESTLAUF_16022026"
 
-SHOW_LAST_N = 3000          # letzte N Pulse für ESR/C
-SHOW_LAST_T = 3600          # letzte N Temperaturpunkte (bei 1 Hz ~ 1 Stunde)
+# Für ESR/C wird SHOW_LAST_N praktisch nicht mehr gebraucht (es wird Gesamt-Historie gezeigt),
+# kann aber erstmal bleiben. Temperatur bleibt "letzte Stunde" etc.
+SHOW_LAST_N = 3000
+SHOW_LAST_T = 3600
 
 SMOOTH_OVERLAY = True
 SMOOTH_WINDOW = 5
@@ -20,11 +22,12 @@ PAUSE_AFTER_S = 3.0
 FAST_PAUSE_S = 0.05
 SLOW_PAUSE_S = 0.30
 
+# Downsampling für ESR/C Anzeige:
+PLOT_EVERY_N_PULSE = 10   # nur jeder 1000. Puls wird geplottet
+
 RUN_DIR = BASE_DIR / "Runs" / RUN_NAME
 PARAMS = RUN_DIR / f"{RUN_NAME}.params.csv"
 TEMPS  = RUN_DIR / f"{RUN_NAME}.tc08.csv"
-
-COLS_PARAMS = ["pulse_id","t_mid_s","esr_ohm","cap_F","E_J","P_peak_W","P_avg_W","i_col","source"]
 
 
 def moving_average(y: pd.Series, window: int):
@@ -54,11 +57,15 @@ def fit_trend(x: np.ndarray, y: np.ndarray):
 
 
 def load_params_df():
+    """
+    Lädt die gesamte params.csv (kann zusätzliche Spalten hinten haben),
+    nutzt nur die ersten 9 Spalten für ESR/C, und downsampled auf jeden 1000. Puls.
+    """
     raw = pd.read_csv(PARAMS, comment="#", header=None)
-
     if raw.empty:
         return raw
 
+    # nur die ersten 9 Spalten (Rest z.B. Temperaturen ignorieren)
     raw = raw.iloc[:, :9].copy()
     raw.columns = ["pulse_id","t_mid_s","esr_ohm","cap_F","E_J","P_peak_W","P_avg_W","i_col","source"]
 
@@ -67,10 +74,11 @@ def load_params_df():
     raw["cap_uF"]   = pd.to_numeric(raw["cap_F"], errors="coerce") * 1e6
 
     df = raw.dropna(subset=["pulse_id","esr_mOhm","cap_uF"]).sort_values("pulse_id").reset_index(drop=True)
-    if len(df) > SHOW_LAST_N:
-        df = df.iloc[-SHOW_LAST_N:].reset_index(drop=True)
-    return df
 
+    # ✅ gesamte Historie, aber nur jeder N-te Puls
+    df = df[df["pulse_id"].astype(int) % int(PLOT_EVERY_N_PULSE) == 0].reset_index(drop=True)
+
+    return df
 
 
 def load_temps_df():
@@ -90,7 +98,7 @@ def load_temps_df():
 
 def plot_series(ax, x, y, ylabel, title):
     ax.clear()
-    ax.plot(x, y, marker="o", linestyle="-", label="Messwerte")
+    ax.plot(x, y, marker="o", linestyle="-", label=f"Messwerte (jeder {PLOT_EVERY_N_PULSE}. Puls)")
 
     idx = iqr_outliers(pd.Series(y))
     if idx.size > 0:
@@ -145,7 +153,7 @@ def main():
         pulse_updated = False
         temp_updated = False
 
-        # ---- Pulsdaten ----
+        # ---- Pulsdaten (downsampled) ----
         if PARAMS.exists():
             try:
                 dfp = load_params_df()
@@ -166,7 +174,7 @@ def main():
             except Exception as e:
                 print(f"[WARN] params plot: {e}")
 
-        # ---- Temperaturdaten ----
+        # ---- Temperaturdaten (letzte SHOW_LAST_T Punkte) ----
         if TEMPS.exists():
             try:
                 dft = load_temps_df()
@@ -192,7 +200,9 @@ def main():
         p_state = "läuft" if dt_p <= PAUSE_AFTER_S else f"PAUSED (keine neuen Pulse seit {dt_p:.1f}s)"
         t_state = "läuft" if dt_t <= PAUSE_AFTER_S else f"PAUSED (keine neuen Temps seit {dt_t:.1f}s)"
 
-        fig.suptitle(f"{RUN_NAME}  |  Pulse: {p_state}  |  Temp: {t_state}")
+        fig.suptitle(
+            f"{RUN_NAME}  |  Pulse: {p_state} (Plot: jeder {PLOT_EVERY_N_PULSE}.)  |  Temp: {t_state}"
+        )
 
         fig.canvas.draw_idle()
         plt.pause(FAST_PAUSE_S if (pulse_updated or temp_updated) else SLOW_PAUSE_S)
