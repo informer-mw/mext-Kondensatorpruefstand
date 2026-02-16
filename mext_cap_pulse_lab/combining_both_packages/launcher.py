@@ -6,7 +6,7 @@ from pathlib import Path
 # ====== CONFIG ======
 BASE_DIR = Path(r"C:\Users\mext\Desktop\mext-Kondensatorpruefstand\mext_cap_pulse_lab\combining_both_packages")
 
-# Muss identisch sein zu acquire_i_u_pulse.py & online_eval_keep_1000.py & tc08_logger.py & live_plot...
+# Muss identisch sein zu acquire_i_u_pulse.py & online_eval_keep_1000.py & tc08_logger.py & live_plot_params_and_temp.py
 RUN_NAME = "TESTLAUF_16022026"
 MEAS_BASE_DIR = Path(r"C:\Users\mext\Desktop\Messreihen")
 
@@ -14,13 +14,13 @@ MEAS_BASE_DIR = Path(r"C:\Users\mext\Desktop\Messreihen")
 ACQUIRE = BASE_DIR / "acquire_i_u_pulse.py"
 EVAL    = BASE_DIR / "online_eval_keep_1000.py"
 TC08    = BASE_DIR / "tc08_logger.py"
-LIVE    = BASE_DIR / "live_plot_params_and_temp.py"   # <- neuer Live-Plot mit Temp
+LIVE    = BASE_DIR / "live_plot_params_and_temp.py" 
 
 # Optional: Testbench mit starten
 TESTBENCH_EXE = BASE_DIR / "testbench_control_Windows.exe"
 START_TESTBENCH = False
 
-# Meta-Wartezeit (damit Eval nicht zu früh startet)
+# Meta-Wartezeit (damit Evaluierung nicht zu früh startet)
 WAIT_META_TIMEOUT_S = 90
 # ====================
 

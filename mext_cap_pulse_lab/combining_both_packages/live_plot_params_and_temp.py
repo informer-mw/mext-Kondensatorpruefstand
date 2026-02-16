@@ -54,14 +54,23 @@ def fit_trend(x: np.ndarray, y: np.ndarray):
 
 
 def load_params_df():
-    df = pd.read_csv(PARAMS, comment="#", header=None, names=COLS_PARAMS)
-    df["pulse_id"] = pd.to_numeric(df["pulse_id"], errors="coerce")
-    df["esr_mOhm"] = pd.to_numeric(df["esr_ohm"], errors="coerce") * 1e3
-    df["cap_uF"]   = pd.to_numeric(df["cap_F"], errors="coerce") * 1e6
-    df = df.dropna(subset=["pulse_id","esr_mOhm","cap_uF"]).sort_values("pulse_id").reset_index(drop=True)
+    raw = pd.read_csv(PARAMS, comment="#", header=None)
+
+    if raw.empty:
+        return raw
+
+    raw = raw.iloc[:, :9].copy()
+    raw.columns = ["pulse_id","t_mid_s","esr_ohm","cap_F","E_J","P_peak_W","P_avg_W","i_col","source"]
+
+    raw["pulse_id"] = pd.to_numeric(raw["pulse_id"], errors="coerce")
+    raw["esr_mOhm"] = pd.to_numeric(raw["esr_ohm"], errors="coerce") * 1e3
+    raw["cap_uF"]   = pd.to_numeric(raw["cap_F"], errors="coerce") * 1e6
+
+    df = raw.dropna(subset=["pulse_id","esr_mOhm","cap_uF"]).sort_values("pulse_id").reset_index(drop=True)
     if len(df) > SHOW_LAST_N:
         df = df.iloc[-SHOW_LAST_N:].reset_index(drop=True)
     return df
+
 
 
 def load_temps_df():

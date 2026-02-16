@@ -9,24 +9,29 @@ BASE_DIR = Path(r"C:\Users\mext\Desktop\Messreihen")
 RUN_NAME = "TESTLAUF_16022026"
 
 POLL_INTERVAL_S = 1.0
-FILE_STABLE_AGE_S = 1.5  # Datei muss "alt genug" sein (fertig geschrieben)
+FILE_STABLE_AGE_S = 1.5 
 
 # AC-Kopplung / DC-Bias für Energieberechnung:
 U_IS_AC_COUPLED = True
 U_DC_BIAS_V = 400.0  # anpassen!
 
 KEEP_EVERY_N = 1000   # nur jeden 1000. Puls als Rohdaten behalten
-DRY_RUN = True      # erst True testen, dann False
+DRY_RUN = True        # erst True testen, dann False
 # ==================================================
 
 RUN_DIR = BASE_DIR / "Runs" / RUN_NAME
 PULSES_DIR = RUN_DIR / "Pulses"
 META_PATH = RUN_DIR / f"{RUN_NAME}.meta.json"
 PARAMS_CSV = RUN_DIR / f"{RUN_NAME}.params.csv"
+TEMPS_CSV = RUN_DIR / f"{RUN_NAME}.tc08.csv" 
 
 PULSE_RE = re.compile(rf"^{re.escape(RUN_NAME)}_pulse-(\d{{10}})\.csv$")
 
-COL_HEADER = "# columns: pulse_id,t_mid_s,esr_ohm,cap_F,E_J,P_peak_W,P_avg_W,i_col,source\n"
+# Header jetzt inkl. Temperaturspalten:
+COL_HEADER = (
+    "# columns: pulse_id,t_mid_s,esr_ohm,cap_F,E_J,P_peak_W,P_avg_W,i_col,source,"
+    "T1_C,T2_C,T3_C,T4_C,T5_C,T6_C,T7_C,T8_C,temp_epoch_s\n"
+)
 
 
 def read_meta():
@@ -171,7 +176,44 @@ def energy_power(t, u, i, *, i_unit, rogowski_v_per_a):
     return E, Ppk, Pav
 
 
-def append_params(pulse_id, t, esr, cap, E, Ppk, Pav, i_col):
+def read_last_temps():
+    """
+    Liest die letzte Datenzeile aus RUN_NAME.tc08.csv:
+    iso_time,epoch_s,T1_C..T8_C
+    Rückgabe: (temps[8], epoch_s)
+    """
+    if not TEMPS_CSV.exists():
+        return [float("nan")] * 8, float("nan")
+
+    try:
+        with TEMPS_CSV.open("rb") as f:
+            f.seek(0, 2)
+            end = f.tell()
+            f.seek(max(0, end - 8192))
+            tail = f.read().decode("utf-8", errors="ignore").splitlines()
+
+        last = None
+        for line in reversed(tail):
+            if not line.strip():
+                continue
+            if line.startswith("iso_time,"):
+                continue
+            last = line
+            break
+
+        if not last:
+            return [float("nan")] * 8, float("nan")
+
+        parts = last.split(",")
+        epoch = float(parts[1])
+        temps = [float(parts[i]) for i in range(2, 10)]  # T1..T8
+        return temps, epoch
+
+    except Exception:
+        return [float("nan")] * 8, float("nan")
+
+
+def append_params(pulse_id, t, esr, cap, E, Ppk, Pav, i_col, temps, temp_epoch):
     ensure_params_header()
     t_mid = float(0.5 * (t[0] + t[-1])) if len(t) else float("nan")
 
@@ -190,7 +232,9 @@ def append_params(pulse_id, t, esr, cap, E, Ppk, Pav, i_col):
         fmt(Ppk),
         fmt(Pav),
         i_col,
-        "per_pulse_online"
+        "per_pulse_online",
+        *(fmt(x) for x in temps),
+        fmt(temp_epoch),
     ]) + "\n"
 
     with PARAMS_CSV.open("a", encoding="utf-8") as f:
@@ -223,13 +267,16 @@ def main():
                 )
                 esr, cap = estimate_esr_c_fft(t, u, i_sig)
 
-                append_params(pid, t, esr, cap, E, Ppk, Pav, i_col)
+                #Temperaturen dazuholen
+                temps, temp_epoch = read_last_temps()
+
+                append_params(pid, t, esr, cap, E, Ppk, Pav, i_col, temps, temp_epoch)
                 processed.add(pid)
-                print(f"[OK] pid={pid} | ESR={esr:.6g} Ω | C={cap*1e6:.2f} µF")
+                print(f"[OK] pid={pid} | ESR={esr:.6g} Ω | C={cap*1e6:.2f} µF | T1={temps[0]:.2f}°C")
 
                 # Löschregel: nur jeden 1000. Rohpuls behalten
                 keep_raw = (pid % KEEP_EVERY_N == 0)
-                if (not keep_raw):
+                if not keep_raw:
                     if DRY_RUN:
                         print(f"[DRY] would delete {path.name}")
                     else:
