@@ -14,6 +14,11 @@ SMOOTH_WINDOW = 5
 MARK_OUTLIERS = True
 SHOW_TREND = True
 
+# --- Neu: Pause-Logik ---
+PAUSE_AFTER_S = 3.0          # nach wie vielen Sekunden ohne neuen Puls "PAUSED" angezeigt wird
+FAST_PAUSE_S = 0.05          # GUI-Eventloop beim normalen Betrieb
+SLOW_PAUSE_S = 0.30          # GUI-Eventloop wenn pausiert / keine neuen Daten
+
 RUN_DIR = BASE_DIR / "Runs" / RUN_NAME
 PARAMS = RUN_DIR / f"{RUN_NAME}.params.csv"
 
@@ -81,18 +86,31 @@ def plot_series(ax, x, y, ylabel, title):
 def main():
     plt.ion()
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10.5, 7.2), sharex=True)
-    fig.suptitle(f"Live – ESR & Kapazität: {RUN_NAME}")
+
     last_pid = None
+    last_update_time = time.time()
+    paused_state = False
+
+    # Erste Überschrift
+    fig.suptitle(f"Live – ESR & Kapazität: {RUN_NAME}")
 
     while True:
+        # Fenster geschlossen? -> sauber beenden
+        if not plt.fignum_exists(fig.number):
+            break
+
         if not PARAMS.exists():
-            time.sleep(REFRESH_S)
+            fig.suptitle(f"Live – ESR & Kapazität: {RUN_NAME} (Warte auf params.csv …)")
+            fig.canvas.draw_idle()
+            plt.pause(SLOW_PAUSE_S)
             continue
 
         try:
             df = load_df()
             if df.empty:
-                time.sleep(REFRESH_S)
+                fig.suptitle(f"Live – ESR & Kapazität: {RUN_NAME} (keine Daten)")
+                fig.canvas.draw_idle()
+                plt.pause(SLOW_PAUSE_S)
                 continue
 
             x = df["pulse_id"].to_numpy(float)
@@ -100,18 +118,34 @@ def main():
             cap = df["cap_uF"].to_numpy(float)
 
             pid_now = int(x[-1])
+
+            # Nur neu plotten, wenn ein neuer Puls da ist
             if last_pid != pid_now:
                 last_pid = pid_now
+                last_update_time = time.time()
+
                 plot_series(ax1, x, esr, "ESR [mΩ]", f"ESR über Pulsnummer – {RUN_NAME}")
                 plot_series(ax2, x, cap, "Kapazität [µF]", f"Kapazität über Pulsnummer – {RUN_NAME}")
                 ax2.set_xlabel("Pulse-ID")
-                fig.canvas.draw()
-                fig.canvas.flush_events()
+
+                fig.suptitle(f"Live – ESR & Kapazität: {RUN_NAME} (läuft)  |  last pid: {pid_now}")
+                fig.canvas.draw_idle()
+                paused_state = False
+
+            # Wenn lange kein Update: PAUSED anzeigen
+            dt_no_update = time.time() - last_update_time
+            if dt_no_update > PAUSE_AFTER_S:
+                if not paused_state:
+                    fig.suptitle(f"Live – ESR & Kapazität: {RUN_NAME} (PAUSED: keine neuen Pulse seit {dt_no_update:.1f}s)")
+                    fig.canvas.draw_idle()
+                    paused_state = True
+                plt.pause(SLOW_PAUSE_S)
+            else:
+                plt.pause(FAST_PAUSE_S)
 
         except Exception as e:
             print(f"[WARN] {e}")
-
-        time.sleep(REFRESH_S)
+            plt.pause(SLOW_PAUSE_S)
 
 if __name__ == "__main__":
     main()
