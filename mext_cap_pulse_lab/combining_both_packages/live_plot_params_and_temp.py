@@ -23,7 +23,7 @@ FAST_PAUSE_S = 0.05
 SLOW_PAUSE_S = 0.30
 
 # Downsampling für ESR/C Anzeige:
-PLOT_EVERY_N_PULSE = 10   # nur jeder 1000. Puls wird geplottet
+PLOT_EVERY_N_PULSE = 1000   # nur jeder 1000. Puls wird geplottet
 
 RUN_DIR = BASE_DIR / "Runs" / RUN_NAME
 PARAMS = RUN_DIR / f"{RUN_NAME}.params.csv"
