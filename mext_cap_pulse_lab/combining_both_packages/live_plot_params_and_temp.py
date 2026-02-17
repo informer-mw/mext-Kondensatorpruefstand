@@ -5,7 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 BASE_DIR = Path(r"C:\Users\mext\Desktop\Messreihen")
-RUN_NAME = "TESTLAUF_16022026"
+RUN_NAME = "TESTLAUF_17022026"
 
 # Für ESR/C wird SHOW_LAST_N praktisch nicht mehr gebraucht (es wird Gesamt-Historie gezeigt),
 # kann aber erstmal bleiben. Temperatur bleibt "letzte Stunde" etc.
@@ -23,7 +23,7 @@ FAST_PAUSE_S = 0.05
 SLOW_PAUSE_S = 0.30
 
 # Downsampling für ESR/C Anzeige:
-PLOT_EVERY_N_PULSE = 1000   # nur jeder 1000. Puls wird geplottet
+PLOT_EVERY_N_PULSE = 100   # nur jeder 1000. Puls wird geplottet
 
 RUN_DIR = BASE_DIR / "Runs" / RUN_NAME
 PARAMS = RUN_DIR / f"{RUN_NAME}.params.csv"
