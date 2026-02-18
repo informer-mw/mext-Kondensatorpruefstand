@@ -6,7 +6,7 @@ import numpy as np
 
 # ===================== CONFIG =====================
 BASE_DIR = Path(r"C:\Users\mext\Desktop\Messreihen")
-RUN_NAME = "TESTLAUF_17022026"
+RUN_NAME = "TESTLAUF_18022026"
 
 POLL_INTERVAL_S = 1.0
 FILE_STABLE_AGE_S = 1.5 
@@ -25,9 +25,12 @@ META_PATH = RUN_DIR / f"{RUN_NAME}.meta.json"
 PARAMS_CSV = RUN_DIR / f"{RUN_NAME}.params.csv"
 TEMPS_CSV = RUN_DIR / f"{RUN_NAME}.tc08.csv" 
 
-PULSE_RE = re.compile(rf"^{re.escape(RUN_NAME)}_pulse-(\d{{10}})\.csv$")
+# per_pulse Dateien: seit Umstellung bevorzugt .npz (binär, schnell)
+# Falls alte Runs mit .csv auswerten, PULSE_EXT wieder auf "csv".
+PULSE_EXT = "npz"  # "npz" oder "csv"
+PULSE_RE = re.compile(rf"^{re.escape(RUN_NAME)}_pulse-(\d{{10}})\.{PULSE_EXT}$")
 
-# Header jetzt inkl. Temperaturspalten:
+# Header fuer pramas.csv:
 COL_HEADER = (
     "# columns: pulse_id,t_mid_s,esr_ohm,cap_F,E_J,P_peak_W,P_avg_W,i_col,source,"
     "T1_C,T2_C,T3_C,T4_C,T5_C,T6_C,T7_C,T8_C,temp_epoch_s\n"
@@ -83,6 +86,7 @@ def file_is_stable(p: Path, min_age_s: float) -> bool:
 
 
 def detect_i_col_from_header(path: Path) -> str:
+    """Legacy-Helfer für alte per_pulse CSVs (nicht mehr Standard)."""
     i_col = "i_V"
     with path.open("r", encoding="utf-8") as f:
         for line in f:
@@ -98,7 +102,7 @@ def detect_i_col_from_header(path: Path) -> str:
 
 
 def read_pulse_csv(path: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    # per_pulse CSV: sample_idx,time_s,u_V,i_<unit>
+    """Legacy: per_pulse CSV: sample_idx,time_s,u_V,i_<unit>"""
     rows = []
     with path.open("r", encoding="utf-8") as f:
         for line in f:
@@ -116,6 +120,33 @@ def read_pulse_csv(path: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     rows.sort(key=lambda r: r[0])
     data = np.array(rows, dtype=float)
     return data[:, 0], data[:, 1], data[:, 2]
+
+
+def read_pulse_npz(path: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray, str, str]:
+    """
+    per_pulse NPZ (aus acquire_i_u_pulse_npz.py):
+      t_s, u_V, i, i_unit
+    Rückgabe: (t, u, i_sig, i_unit("A"/"V"), i_col("i_A"/"i_V"))
+    """
+    d = np.load(path, allow_pickle=False)
+    t = d["t_s"].astype(float, copy=False)
+    u = d["u_V"].astype(float, copy=False)
+    i_sig = d["i"].astype(float, copy=False)
+
+    iu = str(d["i_unit"]) if ("i_unit" in d.files) else "V"
+    if iu.startswith("i_"):
+        i_col = iu
+        i_unit = iu.split("_", 1)[1]
+    else:
+        i_unit = iu
+        i_col = f"i_{i_unit.upper()}"
+
+    i_unit = i_unit.upper()
+    if i_unit not in ("A", "V"):
+        i_unit = "V"
+        i_col = "i_V"
+
+    return t, u, i_sig, i_unit, i_col
 
 
 def estimate_esr_c_fft(t, u, i):
@@ -257,12 +288,16 @@ def main():
                 continue
 
             try:
-                i_col = detect_i_col_from_header(path)  # i_A oder i_V
-                t, u, i_sig = read_pulse_csv(path)
+                if PULSE_EXT.lower() == "npz":
+                    t, u, i_sig, i_unit, i_col = read_pulse_npz(path)
+                else:
+                    i_col = detect_i_col_from_header(path)  # i_A oder i_V
+                    t, u, i_sig = read_pulse_csv(path)
+                    i_unit = ("A" if i_col == "i_A" else "V")
 
                 E, Ppk, Pav = energy_power(
                     t, u, i_sig,
-                    i_unit=("A" if i_col == "i_A" else "V"),
+                    i_unit=i_unit,
                     rogowski_v_per_a=rogowski
                 )
                 esr, cap = estimate_esr_c_fft(t, u, i_sig)

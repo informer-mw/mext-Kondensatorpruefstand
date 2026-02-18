@@ -18,7 +18,7 @@ from picosdk.functions import assert_pico_ok # Fehlerprüfung SDK-Aufrufe
 # Basisordner & Run-Verzeichnis
 BASE_DIR     = r"C:\Users\mext\Desktop\Messreihen"
 
-RUN_NAME   = "TESTLAUF_17022026"  # Messlauf-Name (Ordner+Datei) Pulse_Test_30V_Source_1
+RUN_NAME   = "TESTLAUF_18022026"  # Messlauf-Name (Ordner+Datei)
 RUN_DIR    = os.path.join(BASE_DIR, "Runs", RUN_NAME) 
 CSV_PATH   = os.path.join(RUN_DIR, f"{RUN_NAME}.csv")
 META_PATH  = os.path.join(RUN_DIR, f"{RUN_NAME}.meta.json")
@@ -28,6 +28,11 @@ os.makedirs(RUN_DIR, exist_ok=True)
 # "per_pulse" → Jeder Puls wird als eigene CSV gespeichert
 # "both"       → Beides
 SAVE_MODE = "per_pulse"
+# Format für per_pulse:
+# "csv" = langsam (Text)
+# "npz" = schnell (binär)
+PER_PULSE_FORMAT = "npz"
+NPZ_COMPRESS = False  # True spart Platz, kostet CPU. Für hohe Pulsraten eher False.
 # =================== CONTROL ===================
 
 AUTO_TRIG_MS        = 0            # Fallback-Trigger
@@ -208,8 +213,8 @@ def write_pulse_csv(t, u, i, i_unit, pulse_id, meta=None, out_dir=PER_PULSE_DIR)
     Datei: <RUN_NAME>_pulse-XXXX.csv in RUN_DIR/Pulses
     Spalten: sample_idx,time_s,u_V,i_<i_unit>
     """
-    os.makedirs(PER_PULSE_DIR, exist_ok=True)
-    out_path = os.path.join(PER_PULSE_DIR, f"{RUN_NAME}_pulse-{pulse_id:010d}.csv")
+    os.makedirs(out_dir, exist_ok=True)
+    out_path = os.path.join(out_dir, f"{RUN_NAME}_pulse-{pulse_id:010d}.csv")
 
     header = (
         f"# RUN_NAME={RUN_NAME}\n"
@@ -236,6 +241,35 @@ def write_pulse_csv(t, u, i, i_unit, pulse_id, meta=None, out_dir=PER_PULSE_DIR)
 
 
 # ---------- Session-Erfassung für N Pulse ----------
+
+def write_pulse_npz(t, u, i, i_unit, pulse_id, meta=None, out_dir=PER_PULSE_DIR):
+    """
+    Schreibt EINEN Puls als separate NPZ:
+    Datei: <RUN_NAME>_pulse-XXXX.npz in RUN_DIR/Pulses
+    Enthält Arrays + Meta (für schnelle Online-Auswertung).
+    """
+    os.makedirs(out_dir, exist_ok=True)
+    out_path = os.path.join(out_dir, f"{RUN_NAME}_pulse-{pulse_id:010d}.npz")
+
+    payload = {
+        "t_s": np.asarray(t, dtype=np.float32),
+        "u_V": np.asarray(u, dtype=np.float32),
+        "i":   np.asarray(i, dtype=np.float32),
+        "i_unit": np.array(i_unit),
+        "pulse_id": np.int64(pulse_id),
+        "created_iso": np.array(datetime.now().isoformat()),
+        "rogowski_v_per_a": np.float64(ROGOWSKI_V_PER_A if ROGOWSKI_V_PER_A is not None else np.nan),
+        "u_probe_attenuation": np.float64(U_PROBE_ATTENUATION),
+    }
+    if meta is not None:
+        # Meta optional als JSON-String ablegen (später in online_eval nutzbar)
+        payload["meta_json"] = np.array(json.dumps(meta))
+
+    if NPZ_COMPRESS:
+        np.savez_compressed(out_path, **payload)
+    else:
+        np.savez(out_path, **payload)
+
 def acquire_n_pulses(n_pulses=N_PULSES, inter_pulse_delay_s=INTER_PULSE_DELAY_S):
     """
     Erfasst n_pulses synchron auf CH A/B und hängt sie an die Run-CSV an.
@@ -353,11 +387,18 @@ def acquire_n_pulses(n_pulses=N_PULSES, inter_pulse_delay_s=INTER_PULSE_DELAY_S)
                 append_csv_with_id(t, u, i, i_unit, pulse_id)
             
             elif SAVE_MODE == "per_pulse":
-                write_pulse_csv(t, u, i, i_unit, pulse_id, meta=None, out_dir=PER_PULSE_DIR)
-            
+                if PER_PULSE_FORMAT.lower() == "npz":
+                    write_pulse_npz(t, u, i, i_unit, pulse_id, meta=None, out_dir=PER_PULSE_DIR)
+                else:
+                    write_pulse_csv(t, u, i, i_unit, pulse_id, meta=None, out_dir=PER_PULSE_DIR)
+
             elif SAVE_MODE == "both":
+
                 append_csv_with_id(t, u, i, i_unit, pulse_id)
-                write_pulse_csv(t, u, i, i_unit, pulse_id, meta=None, out_dir=PER_PULSE_DIR)
+                if PER_PULSE_FORMAT.lower() == "npz":
+                    write_pulse_npz(t, u, i, i_unit, pulse_id, meta=None, out_dir=PER_PULSE_DIR)
+                else:
+                    write_pulse_csv(t, u, i, i_unit, pulse_id, meta=None, out_dir=PER_PULSE_DIR)
             else:
                 raise ValueError(f"Unbekannter SAVE_MODE: {SAVE_MODE}")
             

@@ -6,7 +6,7 @@ from ctypes import c_int16, c_int32, c_float
 
 # ===================== CONFIG =====================
 BASE_DIR = Path(r"C:\Users\mext\Desktop\Messreihen")
-RUN_NAME = "TESTLAUF_17022026"
+RUN_NAME = "TESTLAUF_18022026"
 
 LOG_HZ = 1.0                  # 1 Hz
 THERMO_TYPE = "K"             # K-Typ

@@ -7,7 +7,7 @@ from pathlib import Path
 BASE_DIR = Path(r"C:\Users\mext\Desktop\mext-Kondensatorpruefstand\mext_cap_pulse_lab\combining_both_packages")
 
 # Muss identisch sein zu acquire_i_u_pulse.py & online_eval_keep_1000.py & tc08_logger.py & live_plot_params_and_temp.py
-RUN_NAME = "TESTLAUF_17022026"
+RUN_NAME = "TESTLAUF_18022026"
 MEAS_BASE_DIR = Path(r"C:\Users\mext\Desktop\Messreihen")
 
 # Welche Skripte starten?
