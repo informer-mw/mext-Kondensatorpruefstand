@@ -6,7 +6,7 @@ import numpy as np
 
 # ===================== CONFIG =====================
 BASE_DIR = Path(r"C:\Users\mext\Desktop\Messreihen")
-RUN_NAME = "TESTLAUF_19022026"
+RUN_NAME = "LAUF_19022026"
 
 POLL_INTERVAL_S = 1.0
 FILE_STABLE_AGE_S = 1.5 
@@ -15,7 +15,7 @@ FILE_STABLE_AGE_S = 1.5
 U_IS_AC_COUPLED = True
 U_DC_BIAS_V = 400.0  # anpassen!
 
-KEEP_EVERY_N = 100   # nur jeden 1000. Puls als Rohdaten behalten
+KEEP_EVERY_N = 1000   # nur jeden 1000. Puls als Rohdaten behalten
 DRY_RUN = False        # erst True testen, dann False
 # ==================================================
 
