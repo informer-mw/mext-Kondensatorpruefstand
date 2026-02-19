@@ -75,7 +75,7 @@ def load_params_df():
 
     df = raw.dropna(subset=["pulse_id","esr_mOhm","cap_uF"]).sort_values("pulse_id").reset_index(drop=True)
 
-    # ✅ gesamte Historie, aber nur jeder N-te Puls
+    # gesamte Historie, aber nur jeder N-te Puls
     df = df[df["pulse_id"].astype(int) % int(PLOT_EVERY_N_PULSE) == 0].reset_index(drop=True)
 
     return df
