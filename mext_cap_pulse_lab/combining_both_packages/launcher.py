@@ -59,13 +59,13 @@ def main():
 
     # 1) Acquire zuerst
     popen_new_console([py, str(ACQUIRE)], cwd=BASE_DIR)
-    print(" - Acquire gestartet")
+    print(" - Oszilloskop Acquire gestartet")
 
     # 2) TC-08 Logger kann parallel starten
     popen_new_console([py, str(TC08)], cwd=BASE_DIR)
     print(" - TC-08 Logger gestartet")
 
-    # 2b) NEW: Preview-Plot parallel starten (unabhängig, beeinflusst Run nicht)
+    # 2b) Preview-Plot parallel starten (unabhängig, beeinflusst Run nicht)
     if START_PREVIEW:
         if PREVIEW.exists():
             popen_new_console([
@@ -90,7 +90,7 @@ def main():
 
     # 4) Online Eval + Live Plot
     popen_new_console([py, str(EVAL)], cwd=BASE_DIR)
-    print(" - Online Eval gestartet")
+    print(" - Online Evaluierung gestartet")
 
     popen_new_console([py, str(LIVE)], cwd=BASE_DIR)
     print(" - Live Plot (ESR/C/Temp) gestartet")

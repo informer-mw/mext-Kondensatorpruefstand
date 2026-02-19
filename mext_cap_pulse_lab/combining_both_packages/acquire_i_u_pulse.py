@@ -45,7 +45,7 @@ PRETRIG_RATIO       = 0.2            # 20% vor Trigger
 N_SAMPLES           = 400_000 + int(PRETRIG_RATIO * 400_000)   # Gesamtanzahl Samples
 
 # Anzahl Pulse in einer Session + Wartezeit zwischen Pulsen
-N_PULSES            = 100000
+N_PULSES            = 100000000      # praktisch unendlich, da manuell gestoppt wird
 INTER_PULSE_DELAY_S = 0.0            # z.B. 0.01 für 10 ms Pause
 
 # Kanal A: Spannung (kleiner Bereich für höhere Auflösung)
