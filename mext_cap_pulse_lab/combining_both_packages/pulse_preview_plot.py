@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 pulse_preview_plot.py
 
@@ -81,6 +80,9 @@ def main() -> int:
     ap.add_argument("--poll", type=float, default=0.5, help="Polling-Intervall in Sekunden (Default: 0.5)")
     args = ap.parse_args()
 
+
+    # Anzeige-Downsampling für responsive GUI (ändert NICHT deine Auswertung, nur die Darstellung)
+    PLOT_DECIMATE = 20  # z.B. 1=alles, 10=jede 10. Probe, 20=jede 20. Probe
     # Pulses-Ordner bestimmen
     if args.pulses_dir:
         pulses_dir = Path(args.pulses_dir)
@@ -113,8 +115,10 @@ def main() -> int:
 
     ax_i = ax_u.twinx()
 
+
+    ax_u.set_xlim(-600, 600)
     line_u, = ax_u.plot([], [], label="Voltage")
-    line_i, = ax_i.plot([], [], label="Current")
+    line_i, = ax_i.plot([], [], label="Current", color="red")
 
     ax_u.set_ylabel("U [V]")
     ax_i.set_ylabel("I [A]")
@@ -142,13 +146,15 @@ def main() -> int:
                     try:
                         t, u, i, i_unit, pid2 = load_pulse_npz(path)
                         pid = pid2
-                        t_us = (t - t[0]) * 1e6
+                        idx_peak = int(np.argmax(np.abs(i)))
+                        t0 = t[idx_peak]
+                        t_us = (t - t0) * 1e6
 
-                        line_u.set_data(t_us, u)
-                        line_i.set_data(t_us, i)
+                        line_u.set_data(t_us[::PLOT_DECIMATE], u[::PLOT_DECIMATE])
+                        line_i.set_data(t_us[::PLOT_DECIMATE], i[::PLOT_DECIMATE])
                         ax_i.set_ylabel(f"I [{i_unit}]")
 
-                        ax_u.relim(); ax_u.autoscale_view()
+                        ax_u.relim(); ax_u.autoscale_view(scalex=False)
                         ax_i.relim(); ax_i.autoscale_view()
 
                         # Gemeinsame Legende (einmal pro Update ist ok)
@@ -156,7 +162,7 @@ def main() -> int:
 
                         title.set_text(f"{run_label} – Pulse {pid} (Update alle {args.every})")
                         fig.canvas.draw_idle()
-                        fig.canvas.flush_events()
+                        plt.pause(0.001)
 
                         last_shown_pid = pid
                         showed_first = True
@@ -164,7 +170,7 @@ def main() -> int:
                     except Exception as e:
                         print(f"[preview] Fehler beim Laden/Plotten von {path.name}: {e}")
 
-            time.sleep(args.poll)
+            plt.pause(args.poll)
 
     except KeyboardInterrupt:
         pass

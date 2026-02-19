@@ -6,7 +6,7 @@ import numpy as np
 
 # ===================== CONFIG =====================
 BASE_DIR = Path(r"C:\Users\mext\Desktop\Messreihen")
-RUN_NAME = "TESTLAUF_18022026"
+RUN_NAME = "TESTLAUF_19022026"
 
 POLL_INTERVAL_S = 1.0
 FILE_STABLE_AGE_S = 1.5 

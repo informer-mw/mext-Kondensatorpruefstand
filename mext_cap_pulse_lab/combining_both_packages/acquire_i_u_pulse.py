@@ -18,7 +18,7 @@ from picosdk.functions import assert_pico_ok # Fehlerprüfung SDK-Aufrufe
 # Basisordner & Run-Verzeichnis
 BASE_DIR     = r"C:\Users\mext\Desktop\Messreihen"
 
-RUN_NAME   = "TESTLAUF_18022026"  # Messlauf-Name (Ordner+Datei)
+RUN_NAME   = "TESTLAUF_19022026"  # Messlauf-Name (Ordner+Datei)
 RUN_DIR    = os.path.join(BASE_DIR, "Runs", RUN_NAME) 
 CSV_PATH   = os.path.join(RUN_DIR, f"{RUN_NAME}.csv")
 META_PATH  = os.path.join(RUN_DIR, f"{RUN_NAME}.meta.json")

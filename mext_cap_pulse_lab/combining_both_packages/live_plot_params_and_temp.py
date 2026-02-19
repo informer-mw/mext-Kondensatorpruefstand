@@ -5,7 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 BASE_DIR = Path(r"C:\Users\mext\Desktop\Messreihen")
-RUN_NAME = "TESTLAUF_18022026"
+RUN_NAME = "TESTLAUF_19022026"
 
 # Für ESR/C wird SHOW_LAST_N praktisch nicht mehr gebraucht (es wird Gesamt-Historie gezeigt),
 # kann aber erstmal bleiben. Temperatur bleibt "letzte Stunde" etc.
