@@ -14,7 +14,13 @@ MEAS_BASE_DIR = Path(r"C:\Users\mext\Desktop\Messreihen")
 ACQUIRE = BASE_DIR / "acquire_i_u_pulse.py"
 EVAL    = BASE_DIR / "online_eval_keep_1000.py"
 TC08    = BASE_DIR / "tc08_logger.py"
-LIVE    = BASE_DIR / "live_plot_params_and_temp.py" 
+LIVE    = BASE_DIR / "live_plot_params_and_temp.py"
+
+# Pulse Preview (Spannung+Strom in einem Plot, twin y-axis)
+PREVIEW = BASE_DIR / "pulse_preview_plot_twinaxis.py"
+START_PREVIEW = True
+PREVIEW_EVERY_N = 1000
+PREVIEW_POLL_S = 0.5
 
 # Optional: Testbench mit starten
 TESTBENCH_EXE = BASE_DIR / "testbench_control_Windows.exe"
@@ -40,7 +46,8 @@ def wait_for_meta(meta_path: Path, timeout_s: float) -> bool:
 def main():
     py = sys.executable
 
-    run_dir = MEAS_BASE_DIR / "Runs" / RUN_NAME
+    runs_root = MEAS_BASE_DIR / "Runs"
+    run_dir = runs_root / RUN_NAME
     meta_path = run_dir / f"{RUN_NAME}.meta.json"
 
     print("Launcher startet...")
@@ -57,6 +64,20 @@ def main():
     # 2) TC-08 Logger kann parallel starten
     popen_new_console([py, str(TC08)], cwd=BASE_DIR)
     print(" - TC-08 Logger gestartet")
+
+    # 2b) NEW: Preview-Plot parallel starten (unabhängig, beeinflusst Run nicht)
+    if START_PREVIEW:
+        if PREVIEW.exists():
+            popen_new_console([
+                py, str(PREVIEW),
+                "--runs-root", str(runs_root),
+                "--run-name", RUN_NAME,
+                "--every", str(PREVIEW_EVERY_N),
+                "--poll", str(PREVIEW_POLL_S),
+            ], cwd=BASE_DIR)
+            print(f" - Preview Plot gestartet (Update alle {PREVIEW_EVERY_N} Pulse)")
+        else:
+            print(f"WARN: Preview-Skript nicht gefunden: {PREVIEW}")
 
     # 3) Warten auf meta.json (Acquire legt die an)
     print(f" - Warte auf meta.json: {meta_path}")
