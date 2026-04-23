@@ -18,7 +18,7 @@ from picosdk.functions import assert_pico_ok # Fehlerprüfung SDK-Aufrufe
 # Basisordner & Run-Verzeichnis
 BASE_DIR     = r"C:\Users\mext\Desktop\Messreihen"
 
-RUN_NAME   = "LAUF_19022026"  # Messlauf-Name (Ordner+Datei)
+RUN_NAME   = "LAUF_21032026_1"  # Messlauf-Name (Ordner+Datei)
 RUN_DIR    = os.path.join(BASE_DIR, "Runs", RUN_NAME) 
 CSV_PATH   = os.path.join(RUN_DIR, f"{RUN_NAME}.csv")
 META_PATH  = os.path.join(RUN_DIR, f"{RUN_NAME}.meta.json")
@@ -45,7 +45,7 @@ PRETRIG_RATIO       = 0.2            # 20% vor Trigger
 N_SAMPLES           = 400_000 + int(PRETRIG_RATIO * 400_000)   # Gesamtanzahl Samples
 
 # Anzahl Pulse in einer Session + Wartezeit zwischen Pulsen
-N_PULSES            = 100000000      # praktisch unendlich, da manuell gestoppt wird
+N_PULSES            = 10000000000      # praktisch unendlich, da manuell gestoppt wird
 INTER_PULSE_DELAY_S = 0.0            # z.B. 0.01 für 10 ms Pause
 
 # Kanal A: Spannung (kleiner Bereich für höhere Auflösung)
